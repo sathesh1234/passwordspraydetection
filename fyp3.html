@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Your creative styles here */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+            text-align: center;
+        }
+
+        header {
+            background-color: #333;
+            padding: 20px;
+            text-align: center;
+            font-family: 'EvilFont', sans-serif;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 36px;
+            color: #ffc107;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: #212121;
+            padding: 10px;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 20px;
+            font-size: 18px;
+            transition: color 0.3s ease-in-out;
+        }
+
+        nav a:hover {
+            color: #ffc107;
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        /* Creative styles for the detection result */
+        #detection-result {
+            color: #ff5733; /* Custom color for creative design */
+            margin-top: 20px;
+            font-size: 20px;
+        }
+
+        /* Creative styles for the input form */
+        #password-form {
+            margin-top: 20px;
+        }
+
+        #username-input,
+        #password-input {
+            padding: 10px;
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        #create-account-button,
+        #login-button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        #login-button {
+            background-color: #4caf50;
+            color: #fff;
+        }
+
+        #create-account-button {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        /* Table styles */
+        #statistics-table {
+            width: 50%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        #statistics-table th,
+        #statistics-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        #statistics-table th {
+            background-color: #333;
+            color: #fff;
+        }
+    </style>
+    <title>Password Spray Detection</title>
+</head>
+
+<body>
+    <header>
+        <h1>Password Spray Detection</h1>
+    </header>
+
+    <main>
+        <!-- Username and password form -->
+        <div id="password-form">
+            <input type="text" id="username-input" placeholder="Enter Username">
+            <input type="password" id="password-input" placeholder="Enter Password">
+            <button id="create-account-button" onclick="createAccount()">Create Account</button>
+            <button id="login-button" onclick="login()">Login</button>
+        </div>
+        <!-- Detection result display -->
+        <div id="detection-result"></div>
+
+        <!-- Statistics table -->
+        <table id="statistics-table">
+            <thead>
+                <tr>
+                    <th>Login Attempts</th>
+                    <th>Time Taken (s)</th>
+                </tr>
+            </thead>
+            <tbody id="statistics-body"></tbody>
+        </table>
+    </main>
+
+    <script>
+        // JavaScript for password spray detection
+        var users = [];
+        var failedLoginAttempts = 0;
+        var startTime;
+        var timeTakenData = [];
+
+        function createAccount() {
+            var enteredUsername = document.getElementById('username-input').value;
+            var enteredPassword = document.getElementById('password-input').value;
+
+            // Check if the username already exists
+            var isUsernameExists = users.some(function(user) {
+                return user.username === enteredUsername;
+            });
+
+            if (isUsernameExists) {
+                var resultElement = document.getElementById('detection-result');
+                resultElement.innerHTML = 'Username already exists. Please choose another username.';
+            } else {
+                // Create an account
+                users.push({ username: enteredUsername, password: enteredPassword });
+
+                var resultElement = document.getElementById('detection-result');
+                resultElement.innerHTML = 'Account created successfully!';
+            }
+        }
+
+        function login() {
+            var enteredUsername = document.getElementById('username-input').value;
+            var enteredPassword = document.getElementById('password-input').value;
+
+            // Check if the entered username and password match any account
+            var isCredentialsValid = users.some(function(user) {
+                return user.username === enteredUsername && user.password === enteredPassword;
+            });
+
+            // Display login result
+            var resultElement = document.getElementById('detection-result');
+            if (isCredentialsValid) {
+                resultElement.innerHTML = 'Login successful!';
+                failedLoginAttempts = 0; // Reset failed login attempts on successful login
+            } else {
+                // Check for password spray detection based on typing speed
+                var timeTaken = new Date().getTime() - startTime;
+                if (timeTaken < 1000 && failedLoginAttempts >= 3) {
+                    resultElement.innerHTML = 'Possible password spray attack detected!';
+                } else {
+                    resultElement.innerHTML = 'Incorrect username or password.';
+                }
+                timeTakenData.push(timeTaken / 1000);
+                updateTable();
+                failedLoginAttempts++;
+            }
+            startTime = new Date().getTime(); // Record the time after each login attempt
+        }
+
+        function updateTable() {
+            var tableBody = document.getElementById('statistics-body');
+            var row = tableBody.insertRow(-1);
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+
+            cell1.innerHTML = failedLoginAttempts;
+            cell2.innerHTML = timeTakenData[timeTakenData.length - 1];
+        }
+    </script>
+</body>
+
+</html>
